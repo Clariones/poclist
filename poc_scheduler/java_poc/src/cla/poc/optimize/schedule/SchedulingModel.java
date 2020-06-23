@@ -9,4 +9,6 @@ public class SchedulingModel {
     public Map<String, SchedulerNode> allNodes;
     // Map<node1Id, Map<toNodeId, Map<costType, cost>>
     public Map<String, Map<String, Map<String, Double>>> costInfo;
+    //
+    public Map<String, String> cargoTitles;
 }

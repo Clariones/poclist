@@ -2,6 +2,7 @@ package cla.poc.optimize.utils;
 
 import cla.poc.optimize.data.InputData;
 import cla.poc.optimize.data.TransportRequirement;
+import cla.poc.optimize.schedule.CargoTransInfo;
 import cla.poc.optimize.schedule.SchedulerNode;
 import cla.poc.optimize.schedule.SchedulingModel;
 import com.google.gson.Gson;
@@ -43,12 +44,14 @@ public class U {
     public static SchedulingModel createModelFrom(InputData data) {
         SchedulingModel model = new SchedulingModel();
         model.allNodes = new HashMap<>();
+        model.cargoTitles = new HashMap<>();
         data.nodeList.forEach(node->{
             SchedulerNode sNode = new SchedulerNode();
             sNode.id = node.id;
             sNode.name = node.title;
             if (node.cargoList != null && node.cargoList.size() > 0){
                 sNode.cargos = node.cargoList.stream().collect(Collectors.toMap(it->it.cargoClass, it->it.quantity, Double::sum));
+                model.cargoTitles.putAll(node.cargoList.stream().collect(Collectors.toMap(it -> it.cargoClass, it -> it.cargoTitle)));
             }
             sNode.costFromNodes = new HashMap<>();
             model.allNodes.put(sNode.id, sNode);
@@ -118,12 +121,40 @@ public class U {
             executorFunc.accept(curList);
             return;
         }
-        List<String> canUsed = filterFunc.apply(curList, all);
+        List<String> canUsed = filterFunc.apply(all, curList);
         for(String item: canUsed){
             List<String> newList = new ArrayList<>(curList);
             newList.add(item);
             perm(all, idx, newList, filterFunc, executorFunc);
         }
 
+    }
+
+    /** Map(cargoType, List(CargoTransInfo)) */
+    public static Map<String, List<CargoTransInfo>> makeCargoTransInfo(SchedulingModel model) {
+        Map<String, List<CargoTransInfo>> result = new HashMap<>();
+        model.allNodes.forEach((idx, node)->{
+            if (node.cargos == null || node.cargos.isEmpty()){
+                return;
+            }
+            node.cargos.forEach((cargoType, cargoQuantity)->{
+                if (cargoQuantity < 0) {
+                    return;
+                }
+                List<CargoTransInfo> cargoInfoList = result.computeIfAbsent(cargoType, k -> new ArrayList<>());
+                CargoTransInfo cargoInfo = new CargoTransInfo();
+                cargoInfo.nodeId = node.id;
+                cargoInfo.cargoQuantity = cargoQuantity;
+                cargoInfo.cargoType = cargoType;
+                cargoInfoList.add(cargoInfo);
+            });
+        });
+        return result;
+    }
+
+    public static List<String> getUnused(List<String> all, List<String> used){
+        List<String> x = new ArrayList<>(all);
+        x.removeAll(used);
+        return x;
     }
 }
