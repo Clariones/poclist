@@ -29,6 +29,12 @@ public class InputData {
                 .need("氮气", 80)
             .node(9,"某2")
             .node(10,"停车场")
+
+            .node(12,"丙")
+                // .need("氧气", 10)
+                // .need("氮气", 10)
+
+
             .buildNodeList()
         ;
 
@@ -43,6 +49,10 @@ public class InputData {
                 .path(8).to(3).time(40).cash(15)
                 .path(8).to(9).time(40).cash(15)
                 .path(8).to(10).time(15).cash(5)
+
+                .path(12).to(7).time(15).cash(5)
+                .path(12).to(8).time(15).cash(5)
+
                 .buildPathList()
                 ;
         return data;
